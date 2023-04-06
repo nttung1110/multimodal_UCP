@@ -1,0 +1,9 @@
+tracker:
+  name: iou
+
+  skip_frame: 3
+  threshold_dying_track_len: 30
+  threshold_iou_min_track: 0.4
+  len_face_tracks: 30
+
+  is_debug: True

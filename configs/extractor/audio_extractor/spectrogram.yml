@@ -1,0 +1,7 @@
+extractor:
+  name: spectrogram
+
+  n_fft: 2048
+  hop_length: 512
+
+  auth_token: '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'

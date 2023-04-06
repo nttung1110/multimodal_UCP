@@ -1,0 +1,10 @@
+extractor:
+  name: trill
+
+  frame_rate: 16000
+  sample_rate: 16000
+
+  min_length_audio_signal: 20
+
+  path_url_trill: 'https://tfhub.dev/google/nonsemantic-speech-benchmark/trill/3'
+  auth_token: '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'

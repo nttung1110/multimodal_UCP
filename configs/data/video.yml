@@ -1,0 +1,5 @@
+data:
+  name: video_folder
+
+  path_input_folder: ./video_data
+  path_save_json: video_cp_out

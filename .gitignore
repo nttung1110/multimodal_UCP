@@ -1,0 +1,10 @@
+# temporary files
+tmp
+
+# data
+audio_wav_data
+video_data
+results*
+
+tmp/
+**/__pycache__

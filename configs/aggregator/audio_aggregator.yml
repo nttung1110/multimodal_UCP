@@ -1,0 +1,4 @@
+aggregator:
+  name: audio
+  
+  max_cp: 3

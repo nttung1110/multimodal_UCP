@@ -1,0 +1,11 @@
+exp_name: "extractor_'@{extractor.name}'-aggregator_'@{aggregator.name}'-ucp_'@{ucp.name}'"
+output_dir: ./results_audio/
+save_output: True
+merge_option: default
+mark: default
+
+min_length_audio_signal: 20
+
+pipeline:
+  name: unsupervised_audio_inference
+

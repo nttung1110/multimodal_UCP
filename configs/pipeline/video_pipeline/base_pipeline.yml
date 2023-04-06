@@ -1,0 +1,9 @@
+exp_name: "detector_'@{detector.name}'-tracker_'@{tracker.name}'-emotionextractor_'@{extractor.name}'-aggregator_'@{aggregator.name}'-ucp_'@{ucp.name}'"
+output_dir: ./results_video/
+save_output: True
+merge_option: default
+mark: default
+
+pipeline:
+  name: unsupervised_video_inference
+

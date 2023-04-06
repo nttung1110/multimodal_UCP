@@ -1,0 +1,4 @@
+aggregator:
+  name: base
+  
+  max_cp: 3

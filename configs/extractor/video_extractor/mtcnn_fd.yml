@@ -1,0 +1,9 @@
+detector:
+  name: mtcnn
+
+  keep_all: False
+  post_process: False
+  min_face_size: 40
+  device: 'cuda:1'
+  threshold_face: 0.6
+

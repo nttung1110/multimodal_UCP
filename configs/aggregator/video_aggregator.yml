@@ -1,0 +1,5 @@
+aggregator:
+  name: video
+  
+  max_cp: 1
+  num_segments: 2
