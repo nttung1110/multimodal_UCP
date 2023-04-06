@@ -1,4 +1,4 @@
-name: audio_model
+name: multimodal_cp
 channels:
   - pytorch
   - defaults
