@@ -49,7 +49,6 @@ class UnsupervisedVideoInference():
                     + Extracting and detecting faces while performing tracking
             '''
             video_es_signals, video_es_offset, _ = tracker.run(video, face_detector, emot_extractor)
-            
 
             exist_signal = (len(video_es_signals) != 0)
             exist_cp = False

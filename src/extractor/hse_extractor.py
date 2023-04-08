@@ -3,6 +3,7 @@ from hsemotion.facial_emotions import HSEmotionRecognizer
 
 import torch
 import numpy as np
+import pdb
 
 class HSEEmotExtractor():
     def __init__(self, config: Config):
@@ -33,5 +34,7 @@ class HSEEmotExtractor():
 
             return scores, es_feature, emotion_cat
         except:
+            print('Possibly invalid face coordinates')
             raise RuntimeError
+            # pdb.set_trace()
         

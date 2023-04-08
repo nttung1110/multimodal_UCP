@@ -1,10 +1,18 @@
 # temporary files
 tmp
 
+# checkpoint
+checkpoint*
+
+debug*
+
 # data
 audio_wav_data
 video_data
+text_data
 results*
+gcloud_json
 
+*.jpg
 tmp/
 **/__pycache__

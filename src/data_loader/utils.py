@@ -7,7 +7,7 @@ from .video_folder import VideofolderLoader
 def get_loader(config: Config):
     loader = {
         'base_folder': BasefolderLoader,
-        'video_folder': VideofolderLoader
+        'video_folder': VideofolderLoader,
     }
 
     return loader[config.data.name](config)

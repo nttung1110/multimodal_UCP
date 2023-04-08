@@ -4,6 +4,8 @@ from tqdm import tqdm
 import torch
 import cv2
 import numpy as np
+import pdb
+import os.path as osp
 
 class IoUTracker():
     def __init__(self, config: Config):
@@ -84,7 +86,7 @@ class IoUTracker():
         self.all_start_end_offset_track = []
 
     
-    def _creat_or_update(self, bboxes, emot_extractor, idx_frame, frame):
+    def _create_or_update(self, bboxes, emot_extractor, idx_frame, frame):
         # create if box is for new track, update if box belong to old track
         for _, bbox in enumerate(bboxes):
             box = bbox.astype(int)            
@@ -168,12 +170,20 @@ class IoUTracker():
             self._maintain_track_status(idx_frame)
 
             # Stage 2: Assign new boxes to currently active tracks or create a new track if there are no active tracks
-            self._creat_or_update(bboxes, emot_extractor, idx_frame, frame)
+            self._create_or_update(bboxes, emot_extractor, idx_frame, frame)
 
             # debug mode
             if self.config.is_debug:
                 if idx_frame > 400:
+                    pdb.set_trace()
                     break
+
+        # debug visualize tracking video
+        # for each_track in self.all_tracks:
+        #     id_num = each_track['id']
+
+        #     # create folder for that associate id
+        #     save_folder = osp.joi
         
         # get final result
         all_es, all_se_offset, all_emot_cat = self._filter_tracks()

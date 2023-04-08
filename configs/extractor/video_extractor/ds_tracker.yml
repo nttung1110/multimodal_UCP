@@ -1,0 +1,21 @@
+tracker:
+  name: deepsort
+
+  is_debug: True
+  model_path: checkpoint_deep_sort/ckpt.t7
+  model_config: None
+  max_dist: 0.2
+  min_confidence: 0.3
+  nms_max_overlap: 1.0
+  max_iou_distance: 0.7
+  max_age: 70
+  n_init: 3
+  nn_budget: 100
+  use_cuda: True
+  iou_threshold: 0.5
+  similarity_threshold: 0.8
+
+  skip_frame: 3
+  threshold_dying_track_len: 30
+  threshold_iou_min_track: 0.4
+  len_face_tracks: 30

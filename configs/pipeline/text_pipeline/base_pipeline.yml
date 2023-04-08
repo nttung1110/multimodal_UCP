@@ -1,0 +1,11 @@
+exp_name: "extractor_'@{extractor.name}'-aggregator_'@{aggregator.name}'-ucp_'@{ucp.name}'"
+output_dir: ./results_text/
+save_output: True
+merge_option: default
+mark: default
+
+len_utt_tracks: 25
+
+pipeline:
+  name: unsupervised_text_inference
+

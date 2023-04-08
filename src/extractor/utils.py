@@ -2,8 +2,11 @@ from src.utils import Config
 from .trill_extractor import TrillExtractor
 from .spectrogram_extractor import SpectrogramExtractor
 from .mtcnn_detector import MTCNNDetector
-from .iou_tracker import IoUTracker
 from .hse_extractor import HSEEmotExtractor
+
+from .iou_tracker import IoUTracker
+from .deep_sort_tracker import DeepSortTracker
+from .compm_extractor import CoMPMExtractor
 
 
 def get_extractor(config: Config):
@@ -13,6 +16,7 @@ def get_extractor(config: Config):
         'spectrogram': SpectrogramExtractor,
         # for video
         'hse': HSEEmotExtractor,
+        'compm': CoMPMExtractor, 
 }
     return extractor[config.extractor.name](config.extractor)
 
@@ -27,7 +31,8 @@ def get_detector(config: Config): # face detector
 
 def get_tracker(config: Config):
     tracker = {
-        'iou': IoUTracker
+        'iou': IoUTracker,
+        'deepsort': DeepSortTracker
     }
 
     return tracker[config.tracker.name](config.tracker)

@@ -7,3 +7,4 @@ tracker:
   len_face_tracks: 30
 
   is_debug: True
+  folder_debug_tracking: './debug_tracking'
