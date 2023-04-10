@@ -59,7 +59,7 @@ class TrillExtractor(BaseExtractor):
         #emb_layer19.shape.assert_is_compatible_with([None, 12288])
         #print(emb.shape[0])
         return tf.transpose(emb)
-
+    
     def run(self, path_file):
         """
         @params: awv file directory
@@ -96,3 +96,55 @@ class TrillExtractor(BaseExtractor):
         length_in_sec = int(audio.duration_seconds)
 
         return audio_es_signals, corres_offset, length_in_sec, length
+
+
+    def run_both(self, path_file, ucp):
+        """
+            Different from run function: It perform both feature extraction and detecting
+                CP at the same time for better inference time 
+        """
+
+        # diarization step
+        list_offset, length = self._diarize(path_file)
+
+        # extract emotion step
+        audio = AudioSegment.from_file(path_file) 
+        length_in_sec = int(audio.duration_seconds)
+
+        all_scores_cp_track = []
+        all_peaks_cp_track = []
+        all_scores_sm_cp_track = []
+        all_list_offset = []
+
+        softmax = torch.nn.Softmax(dim=1)
+
+        for a, start, stop in list_offset:
+            if (start == None or stop == None or int(stop * 1000) - int(start * 1000) <= 1000):
+                continue
+            feat = self._feat_signals(audio, start, stop)
+            feat = np.transpose(feat.cpu().numpy())
+            
+            len_signal = feat.shape[0]
+            if len_signal < self.config.min_length_audio_signal:
+                # ignore short tracks
+                continue
+            
+            res_scores_track, res_peaks_track = ucp.detect_cp(feat)
+            if len(res_peaks_track) == 0:
+                # no cp exist
+                continue
+            else:
+                score_pick_track = []
+                for idx, each_cp in enumerate(res_peaks_track):
+                    score_pick_track.append(res_scores_track[each_cp])
+
+                sm = softmax(torch.Tensor(np.array([score_pick_track])))[0].tolist()
+
+            all_scores_cp_track.append(res_scores_track)
+            all_peaks_cp_track.append(res_peaks_track)
+            all_scores_sm_cp_track.append(sm)
+            all_list_offset.append((a, start, stop))
+            
+        return all_peaks_cp_track, all_scores_cp_track, \
+                all_scores_sm_cp_track, all_list_offset, \
+                length_in_sec

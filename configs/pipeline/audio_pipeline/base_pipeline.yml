@@ -7,5 +7,5 @@ mark: default
 min_length_audio_signal: 20
 
 pipeline:
-  name: unsupervised_audio_inference
+  name: unsupervised_audio_inference_v1
 
