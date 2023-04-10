@@ -22,6 +22,7 @@ class HSEEmotExtractor():
         
     def run(self, frame, box):
         [x1, y1, x2, y2] = box
+        # print(box)
         x1, x2  = min(max(0, x1), frame.shape[1]), min(max(0, x2), frame.shape[1]) # replace with clip?
         y1, y2 = min(max(0, y1), frame.shape[0]), min(max(0, y2), frame.shape[0])
         face_imgs = frame[y1:y2, x1:x2]

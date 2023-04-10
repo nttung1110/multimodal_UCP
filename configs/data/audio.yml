@@ -1,5 +1,5 @@
 data:
   name: base_folder
 
-  path_input_folder: ./audio_wav_data
+  path_input_folder: ./EVAL_LDC2023E07/PREPROCESSED_AUDIO/wav_files/
   path_save_json: audio_cp_out

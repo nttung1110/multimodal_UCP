@@ -38,6 +38,9 @@ class UnsupervisedVideoInference():
             # Recording processing time
             start = datetime.now()
 
+            if 'AJ9' not in f_p_in:
+                continue
+
             # read video
             video = VideoFileClip(f_p_in)
             video_num_frames = int(video.fps * video.duration)
@@ -48,7 +51,7 @@ class UnsupervisedVideoInference():
                 All-in-one process:
                     + Extracting and detecting faces while performing tracking
             '''
-            video_es_signals, video_es_offset, _ = tracker.run(video, face_detector, emot_extractor)
+            video_es_signals, video_es_offset, _ = tracker.run(video, face_detector, emot_extractor, f_p_in)
 
             exist_signal = (len(video_es_signals) != 0)
             exist_cp = False
@@ -57,6 +60,7 @@ class UnsupervisedVideoInference():
             res_stat = []
             res_cp = []
             res_score = []
+            individual_cp = []
             if exist_signal:
                 all_peaks_track, _, all_scores_sm_track = ucp.run(video_es_signals)
 
@@ -81,7 +85,7 @@ class UnsupervisedVideoInference():
                         all_refined_scores_sm_track.append(sm_score_track)
 
                     # aggregate to find final change point
-                    res_cp, res_score, res_stat, individual_cp = aggregator.run(all_peaks_track, all_refined_scores_sm_track,
+                    res_cp, res_score, res_stat, individual_cp = aggregator.run(all_refined_peaks_track, all_refined_scores_sm_track,
                                                                                 video_num_frames, video_fps, start_second)
 
             time_processing = datetime.now() - start

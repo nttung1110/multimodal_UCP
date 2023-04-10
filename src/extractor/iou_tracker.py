@@ -1,15 +1,18 @@
 from src.utils import Config
 from tqdm import tqdm
+from .base_tracker import BaseTracker
 
 import torch
 import cv2
 import numpy as np
 import pdb
 import os.path as osp
+import bbox_visualizer as bbv
 
-class IoUTracker():
+
+class IoUTracker(BaseTracker):
     def __init__(self, config: Config):
-        self.config = config
+        super(IoUTracker, self).__init__(config)
 
         # init model
         self._init_model()
@@ -131,6 +134,7 @@ class IoUTracker():
 
                 ### then do update
                 self.all_es_feat_tracks[best_match_track_id] = np.append(self.all_es_feat_tracks[best_match_track_id], [es_feature], axis=0) # add more feature for this track
+                self.all_emotion_category_tracks[best_match_track_id] = np.append(self.all_emotion_category_tracks[best_match_track_id], [emotion_cat], 0)
                 self.all_start_end_offset_track[best_match_track_id][-1] = idx_frame # change index frame
 
 
@@ -151,7 +155,7 @@ class IoUTracker():
 
         return all_es_feat_tracks_filter, all_start_end_offset_track_filter, all_emotion_category_tracks_filter
 
-    def run(self, video, face_detector, emot_extractor):
+    def run(self, video, face_detector, emot_extractor, f_p_in):
         # setup a new set of record list everytime processing a video
         self._init_list_record()
         frames_list = list(video.iter_frames())
@@ -174,8 +178,9 @@ class IoUTracker():
 
             # debug mode
             if self.config.is_debug:
-                if idx_frame > 400:
-                    pdb.set_trace()
+                if idx_frame > self.config.max_frame_debug:
+                    self._debug_visualize_track_emotion(frames_list, f_p_in, 
+                                          video.fps, video.w, video.h)
                     break
 
         # debug visualize tracking video

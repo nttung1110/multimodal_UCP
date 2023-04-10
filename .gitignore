@@ -12,6 +12,7 @@ video_data
 text_data
 results*
 gcloud_json
+EVAL*
 
 *.jpg
 tmp/

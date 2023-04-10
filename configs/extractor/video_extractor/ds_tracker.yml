@@ -19,3 +19,7 @@ tracker:
   threshold_dying_track_len: 30
   threshold_iou_min_track: 0.4
   len_face_tracks: 30
+
+  is_debug: True
+  folder_debug_tracking: './debug_tracking_ds'
+  max_frame_debug: 400

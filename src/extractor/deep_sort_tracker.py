@@ -17,10 +17,11 @@ import torch.nn.functional as F
 import scipy.linalg
 INFTY_COST = 1e+5
 
+from .base_tracker import BaseTracker
 
-class DeepSortTracker():
+class DeepSortTracker(BaseTracker):
     def __init__(self, cfg):
-        self.config = cfg
+        super(DeepSortTracker, self).__init__(cfg)
         self._init_model(cfg)
 
     def _init_model(self, cfg):
@@ -53,6 +54,8 @@ class DeepSortTracker():
 
         # output bbox identities
         outputs = []
+
+        # pdb.set_trace()
         for track in self.tracker.tracks:
             if not track.is_confirmed() or track.time_since_update > 1:
                 continue
@@ -174,71 +177,39 @@ class DeepSortTracker():
 
         return best_match_track_id, best_match_score
     
+
     def _check_exist_track(self, track_id):
         where_track_id = None
-        active_track_indices = [i for i, _ in enumerate(self.all_tracks) if i not in self.mark_old_track_idx]
-
         for idx, _ in enumerate(self.all_tracks):
-            if idx in self.mark_old_track_idx:
-                continue
             each_active_tracks = self.all_tracks[idx]
             if each_active_tracks['id'] == track_id:
                 where_track_id = idx
                 break
 
         return where_track_id
-    
-    def _create_or_update(self, bboxes, emot_extractor, idx_frame, frame):
-        for track in self.tracker.tracks:
-            if not track.is_confirmed() or track.time_since_update > 1:
-                continue
-            
-            track_id = track.track_id
-            # try:
-            #     bbox_detector = bounding_boxes[track_id].astype(int)
-            # except:
-            #     continue
 
-            bbox = track.to_tlwh()
-            bbox_tracker = self._tlwh_to_xyxy(bbox)
+    
+    def _create_or_update(self, track_bboxes, emot_extractor, idx_frame, frame):
+        for track in track_bboxes:
+            x1, y1, x2, y2, track_id = track
+            
+            bbox_tracker = [x1,y1,x2,y2]
             
             # extract emotion feature
             _, es_feature, emotion_cat = emot_extractor.run(frame, bbox_tracker)
 
-            # check if this track id exist
-            where_track_id = self._check_exist_track(track_id)
-
-            if where_track_id is not None:
-                # find all similar tracks
-                best_match_track_id, _ = self._match_and_update_track(bbox_tracker, es_feature)
+            exist_track_id = self._check_exist_track(track_id)
+            if exist_track_id is None:
+                # create new track
+                self._create_new_track(es_feature, emotion_cat, 
+                                     bbox_tracker, track_id, idx_frame)
                 
-                if best_match_track_id is None:
-                    # Initialize a new track
-                    new_track = {"bbox": [bbox_tracker], "id": track_id, "frames_appear": [idx_frame]}
+            else:
+                # update new track
+                self._update_old_track(es_feature, emotion_cat,
+                                       bbox_tracker, exist_track_id, idx_frame)
 
-                    new_es_array_track = np.array([es_feature])
-                    new_start_end_offset_track = [idx_frame, idx_frame]  # [start, end]
-                    new_ec_array_track = np.array([emotion_cat])
-
-                    self.all_tracks.append(new_track)
-                    self.all_emotion_category_tracks.append(new_ec_array_track)
-                    self.all_es_feat_tracks.append(new_es_array_track)
-                    self.all_start_end_offset_track.append(new_start_end_offset_track)
-
-                else:
-                    # Update existing track
-                    self.all_tracks[best_match_track_id]['bbox'].append(bbox_tracker)
-                    self.all_tracks[best_match_track_id]['frames_appear'].append(idx_frame)
-
-                    time_interpolate = idx_frame - self.all_tracks[best_match_track_id]['frames_appear'][-2] - 1
-                    
-                    if time_interpolate > 0:
-                        old_rep_track = self.all_es_feat_tracks[best_match_track_id][-1].tolist()
-                        self.all_es_feat_tracks[best_match_track_id] = np.append(self.all_es_feat_tracks[best_match_track_id], [old_rep_track] * time_interpolate, axis=0)
-                    
-                    self.all_es_feat_tracks[best_match_track_id] = np.append(self.all_es_feat_tracks[best_match_track_id], [es_feature], axis=0)  # add more feature for this track
-                    self.all_start_end_offset_track[best_match_track_id][-1] = idx_frame  # change index frame
-
+    
     def _filter_tracks(self):
         # filter those tracks having length smaller than a number
         all_es_feat_tracks_filter = []
@@ -264,9 +235,10 @@ class DeepSortTracker():
         self.all_es_feat_tracks = []
         self.all_start_end_offset_track = []
 
-    def run(self, video, face_detector, emot_extractor):
+    def run(self, video, face_detector, emot_extractor, f_p_in):
         self._init_list_record()
         frames_list = list(video.iter_frames())
+        print(f_p_in)
 
         for idx_frame, frame in tqdm(enumerate(frames_list), total=len(frames_list)):
             if idx_frame % self.config.skip_frame != 0:
@@ -281,6 +253,7 @@ class DeepSortTracker():
             # Track the objects using DeepSORT
             ## first convert xyxy to xc|yc|wh
             # TO DO: Put this in a separate function
+            print('pre:', bboxes)
             for idx, box in enumerate(bboxes):
                 [x1, y1, x2, y2] = box
 
@@ -293,19 +266,21 @@ class DeepSortTracker():
                 bboxes[idx] = [xc, yc, width, height]
 
             track_bboxes = self.update(bboxes, probs, frame)
+            print('af:', track_bboxes)
 
-            if track_bboxes is None:
-                continue
+            # pre: [[210.43867 146.40266 260.769   200.92578]]
 
-            # Stage 1: Maintaining track status to kill inactive track
-            self._maintain_track_status(track_bboxes, idx_frame)
+            # # Stage 1: Maintaining track status to kill inactive track
+            # self._maintain_track_status(track_bboxes, idx_frame)
 
             # Stage 2: Assign new boxes to currently active tracks or create a new track if there are no active tracks
-            self._create_or_update(bboxes, emot_extractor, idx_frame, frame)
+            self._create_or_update(track_bboxes, emot_extractor, idx_frame, frame)
 
             # debug mode
             if self.config.is_debug:
-                if idx_frame > 1000:
+                if idx_frame > self.config.max_frame_debug:
+                    self._debug_visualize_track_emotion(frames_list, f_p_in, 
+                                          video.fps, video.w, video.h)
                     break
         
         pdb.set_trace()

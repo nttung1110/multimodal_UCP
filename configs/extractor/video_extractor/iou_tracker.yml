@@ -7,4 +7,5 @@ tracker:
   len_face_tracks: 30
 
   is_debug: True
-  folder_debug_tracking: './debug_tracking'
+  folder_debug_tracking: './debug_tracking_iou'
+  max_frame_debug: 400
