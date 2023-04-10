@@ -15,5 +15,6 @@ gcloud_json
 EVAL*
 
 *.jpg
+*.json
 tmp/
 **/__pycache__

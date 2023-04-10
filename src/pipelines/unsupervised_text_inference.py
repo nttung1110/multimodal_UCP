@@ -47,14 +47,15 @@ class UnsupervisedTextInference():
             text_es, offset = extractor.run(f_p_in)
 
             if len(text_es) == 0:
-                # no voice track found => no change point
+                # no text track found => no change point
                 final_cp_res = []
                 res_score = []
                 individual_cp = []
-            if text_es[0].shape[0] < self.config.len_utt_tracks or text_es[1].shape[0] < self.config.len_utt_tracks:
-                # short utterance => no change point 
-                final_cp_res = []
-                res_score = []
+            # if text_es[0].shape[0] < self.config.len_utt_tracks or text_es[1].shape[0] < self.config.len_utt_tracks:
+            #     # short utterance => no change point 
+            #     final_cp_res = []
+            #     res_score = []
+            #     individual_cp = []
 
             else:
                 # detect with ucp

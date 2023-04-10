@@ -128,8 +128,9 @@ class CoMPMExtractor:
 
         # translate all text
         for idx, data in enumerate(text_data):
+            message, start, end = data.split("|@@@@@|")
             # translate
-            text_data[idx] = self.translator.translate(text_data[idx]).text
+            text_data[idx] = self.translator.translate(message).text
 
         # preprocess by eliminating auto-reply utterance
 
@@ -143,8 +144,15 @@ class CoMPMExtractor:
 
 
         for segment in text_data:
-            seg_id = int(segment.split(':')[0])
-            seg_text = segment.split(':')[1]
+            # seg_id = segment.split(':')[0]
+            # seg_text = segment.split(':')[1]
+            if segment[0] == "#":
+                seg_id = segment[0]
+                seg_text = segment[2:]
+            else:
+                seg_id = segment[:6]
+                seg_text = segment[7:]
+            
             conversation_list.append(seg_text)
 
             if first_speaker == None:
@@ -183,6 +191,8 @@ class CoMPMExtractor:
         with torch.no_grad():
             for i_batch, data in enumerate(tqdm(test_dataloader)):
                 """Prediction"""
+                
+                
                 batch_input_tokens, _, batch_speaker_tokens, batch_utterance = data
                 batch_input_tokens = batch_input_tokens.cuda()
 
@@ -192,6 +202,7 @@ class CoMPMExtractor:
 
                 # check whether this feat belongs to which speaker
                 cur_utterance = batch_utterance[0]
+               
                 if cur_utterance not in dict_feat:
                     dict_feat[cur_utterance] = feat_emotion[0].tolist()
 
@@ -209,7 +220,11 @@ class CoMPMExtractor:
 
             for each_utt in list_speaker_utterance:
                 if each_key_speaker == 's1':
-                    list_feat_s1.append(dict_feat[each_utt])
+                    try:
+                        list_feat_s1.append(dict_feat[each_utt])
+                    except:
+                        pdb.set_trace()
+                    
                 else:
                     list_feat_s2.append(dict_feat[each_utt])
 
@@ -252,9 +267,14 @@ class Darpa_raw_loader(Dataset):
                 
             # speaker = data.strip().split(':')[0]
             # utt = data.strip().split(':')[1]
-
-            speaker = data[:6]
-            utt = data[7:]
+            
+            if data[0] == "#":
+                speaker = data[0]
+                utt = data[2:]
+            else:
+                speaker = data[:6]
+                utt = data[7:]
+                
             # emo = data.strip().split('\t')[-1]
             
             # if emo in pos:

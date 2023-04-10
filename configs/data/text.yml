@@ -1,5 +1,5 @@
 data:
   name: base_folder
 
-  path_input_folder: ./text_data
+  path_input_folder: ./EVAL_LDC2023E07/PREPROCESSED_TEXT/ltf_txt
   path_save_json: text_cp_out

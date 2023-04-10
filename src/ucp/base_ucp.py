@@ -36,6 +36,8 @@ class BaseUCP:
         all_scores_sm_cp_track = []
 
         for each_signal in es_signals:
+            if each_signal.shape[0] == 0:
+                continue
             res_scores_track, res_peaks_track = self._detect_cp(each_signal)
 
             if len(res_peaks_track) == 0:
