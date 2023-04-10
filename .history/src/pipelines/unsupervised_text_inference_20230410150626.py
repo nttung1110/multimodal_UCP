@@ -40,28 +40,31 @@ class UnsupervisedTextInference():
             # if 'en' in f_p_in:
             #     continue # only read chinese version
             print(f_p_in)
-            if os.path.exists(f_p_out):
-                print(f"Skipping: {f_p_out}, results are available")
-                continue
             # Recording processing time
             start = datetime.now()
             
             # extract features
-            text_es, text_offset = extractor.run(f_p_in)
+            text_es, offset = extractor.run(f_p_in)
 
             if len(text_es) == 0:
                 # no text track found => no change point
                 final_cp_res = []
                 res_score = []
                 individual_cp = []
+            # if text_es[0].shape[0] < self.config.len_utt_tracks or text_es[1].shape[0] < self.config.len_utt_tracks:
+            #     # short utterance => no change point 
+            #     final_cp_res = []
+            #     res_score = []
+            #     individual_cp = []
+
             else:
                 # detect with ucp
-                all_peaks_track, _, all_scores_sm_track = ucp.run_for_text(text_es, text_offset)
+                all_peaks_track, _, all_scores_sm_track = ucp.run(text_es)
 
                 # aggregating change point
                 final_cp_res, res_score = aggregator.run(all_peaks_track, all_scores_sm_track)
 
-                individual_cp = all_peaks_track
+                individual_cp = [a.astype(int).tolist() for a in all_peaks_track]
 
             # save output 
             time_processing = datetime.now() - start
@@ -70,7 +73,7 @@ class UnsupervisedTextInference():
                     'final_cp_llr': res_score,
                     'type': 'text',
                     'time_processing': int(time_processing.total_seconds()),
-                    'individual_cp': individual_cp
+                    'individual_cp': list(individual_cp)
                 }
             with open(f_p_out, 'w') as fp:
                 json.dump(res, fp, indent=4)

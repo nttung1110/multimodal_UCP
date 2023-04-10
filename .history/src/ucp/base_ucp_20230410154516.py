@@ -67,13 +67,12 @@ class BaseUCP:
                     start_offset_utt_by_speaker['s2']]
 
         all_peaks_track_refined = []
-        all_scores_sm_cp_track = []
-        all_scores_cp_track = []
+        all_scores_pick_softmax_track = []
 
-        for each_signal, each_offset in zip(es_signals, es_offset):
-            if each_signal.shape[0] == 0:
+        for each_signal, each_offset in enumerate(es_signals, es_offset):
+            if each_signal.shape[0] == None:
                 continue
-            
+
             res_scores_track, res_peaks_track = self.detect_cp(each_signal)
 
             if len(res_peaks_track) == 0:
@@ -81,20 +80,36 @@ class BaseUCP:
                 continue
 
             score_pick_track = []
-            refined_peak_track = []
             for idx, each_cp in enumerate(res_peaks_track):
-                refined_peak_track.append(each_offset[each_cp-1])
                 score_pick_track.append(res_scores_track[each_cp])
 
             sm = softmax(torch.Tensor(np.array([score_pick_track])))[0].tolist()
 
-            all_peaks_track_refined.append(refined_peak_track)
-            all_scores_sm_cp_track.append(sm)
-            all_scores_cp_track.append(res_scores_track)
-
-        return all_peaks_track_refined, all_scores_cp_track, all_scores_sm_cp_track
 
 
+        if len(res_peaks_track_s1) != 0:
+            # having cp
+            score_pick_track = []
+            refined_peaks_track_s1 = [] # cp location should be character level
+            offset_s1 = start_offset_utt_by_speaker['s1']
+
+            for idx, each_cp in enumerate(res_peaks_track_s1):
+                refined_peaks_track_s1.append(offset_s1[each_cp-1]) # convert utterance level index to character level index 
+                score_pick_track.append(res_scores_track_s1[each_cp])
+
+            score_sm_cp_s1 = softmax(torch.Tensor(np.array([score_pick_track])))[0].tolist()
+
+        # check condition before doing s2
+        if s2_signal.shape[0] != 0:
+
+            all_peaks_track_refined = [refined_peaks_track_s1,
+                                        refined_peaks_track_s2]
+            all_scores_pick_softmax_track = [score_sm_cp_s1,
+                                            score_sm_cp_s2]
+        else:
+            # s1 only
+            all_peaks_track_refined = [refined_peaks_track_s1]
+            all_scores_pick_softmax_track = [score_sm_cp_s1]
 
     
     

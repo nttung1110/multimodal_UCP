@@ -61,7 +61,7 @@ class UnsupervisedTextInference():
                 # aggregating change point
                 final_cp_res, res_score = aggregator.run(all_peaks_track, all_scores_sm_track)
 
-                individual_cp = all_peaks_track
+                # individual_cp = [a.astype(int).tolist() for a in all_peaks_track]
 
             # save output 
             time_processing = datetime.now() - start
@@ -70,7 +70,7 @@ class UnsupervisedTextInference():
                     'final_cp_llr': res_score,
                     'type': 'text',
                     'time_processing': int(time_processing.total_seconds()),
-                    'individual_cp': individual_cp
+                    'individual_cp': all_peaks_track
                 }
             with open(f_p_out, 'w') as fp:
                 json.dump(res, fp, indent=4)

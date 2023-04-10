@@ -67,13 +67,12 @@ class BaseUCP:
                     start_offset_utt_by_speaker['s2']]
 
         all_peaks_track_refined = []
-        all_scores_sm_cp_track = []
-        all_scores_cp_track = []
+        all_scores_pick_softmax_track = []
 
-        for each_signal, each_offset in zip(es_signals, es_offset):
-            if each_signal.shape[0] == 0:
+        for each_signal, each_offset in enumerate(es_signals, es_offset):
+            if each_signal.shape[0] == None:
                 continue
-            
+
             res_scores_track, res_peaks_track = self.detect_cp(each_signal)
 
             if len(res_peaks_track) == 0:
@@ -89,12 +88,8 @@ class BaseUCP:
             sm = softmax(torch.Tensor(np.array([score_pick_track])))[0].tolist()
 
             all_peaks_track_refined.append(refined_peak_track)
-            all_scores_sm_cp_track.append(sm)
-            all_scores_cp_track.append(res_scores_track)
-
-        return all_peaks_track_refined, all_scores_cp_track, all_scores_sm_cp_track
-
-
+            all_scores_pick_softmax_track.append(sm[0].tolist())
+        
 
     
     

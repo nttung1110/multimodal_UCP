@@ -70,7 +70,7 @@ class UnsupervisedTextInference():
                     'final_cp_llr': res_score,
                     'type': 'text',
                     'time_processing': int(time_processing.total_seconds()),
-                    'individual_cp': individual_cp
+                    'individual_cp': all_peaks_track
                 }
             with open(f_p_out, 'w') as fp:
                 json.dump(res, fp, indent=4)

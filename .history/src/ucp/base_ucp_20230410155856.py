@@ -74,6 +74,7 @@ class BaseUCP:
             if each_signal.shape[0] == 0:
                 continue
             
+            pdb.set_trace()
             res_scores_track, res_peaks_track = self.detect_cp(each_signal)
 
             if len(res_peaks_track) == 0:

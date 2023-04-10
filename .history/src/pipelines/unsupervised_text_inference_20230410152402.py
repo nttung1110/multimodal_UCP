@@ -47,7 +47,7 @@ class UnsupervisedTextInference():
             start = datetime.now()
             
             # extract features
-            text_es, text_offset = extractor.run(f_p_in)
+            text_es, _ = extractor.run(f_p_in)
 
             if len(text_es) == 0:
                 # no text track found => no change point
@@ -56,12 +56,19 @@ class UnsupervisedTextInference():
                 individual_cp = []
             else:
                 # detect with ucp
-                all_peaks_track, _, all_scores_sm_track = ucp.run_for_text(text_es, text_offset)
+                all_peaks_track, _, all_scores_sm_track = ucp.run(text_es)
+
+                # refined peak track and convert it back to character level index
+                all_peaks_track_refined = []
+                all_scores_pick_softmax_track = []
+
+                tmp = {'s1': all_peaks_track[0], 's2': all_peaks_track[1]}
+        tmp_score = {'s1': all_scores_track[0], 's2': all_scores_track[1]}
 
                 # aggregating change point
                 final_cp_res, res_score = aggregator.run(all_peaks_track, all_scores_sm_track)
 
-                individual_cp = all_peaks_track
+                individual_cp = [a.astype(int).tolist() for a in all_peaks_track]
 
             # save output 
             time_processing = datetime.now() - start
@@ -70,7 +77,7 @@ class UnsupervisedTextInference():
                     'final_cp_llr': res_score,
                     'type': 'text',
                     'time_processing': int(time_processing.total_seconds()),
-                    'individual_cp': individual_cp
+                    'individual_cp': list(individual_cp)
                 }
             with open(f_p_out, 'w') as fp:
                 json.dump(res, fp, indent=4)

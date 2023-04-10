@@ -63,38 +63,42 @@ class BaseUCP:
     def run_for_text(self, es_signals, start_offset_utt_by_speaker):
         print("========Detecting change point from individual ES track===========")
         
-        es_offset = [start_offset_utt_by_speaker['s1'],
-                    start_offset_utt_by_speaker['s2']]
+        # only have s1 or s2 individual
+        s1_signal = es_signals[0]
+        s2_signal = es_signals[1]
 
+        # do s1 first since s2 could be None since a few text files might have # in user id
+        res_scores_track_s1, res_peaks_track_s1 = self.detect_cp(s1_signal)
+        
         all_peaks_track_refined = []
-        all_scores_sm_cp_track = []
-        all_scores_cp_track = []
+        all_scores_pick_softmax_track = []
 
-        for each_signal, each_offset in zip(es_signals, es_offset):
-            if each_signal.shape[0] == 0:
-                continue
-            
-            res_scores_track, res_peaks_track = self.detect_cp(each_signal)
+        for each_signal in es_signals:
+            all_peaks_track_refined
 
-            if len(res_peaks_track) == 0:
-                # no cp exist
-                continue
-
+        if len(res_peaks_track_s1) != 0:
+            # having cp
             score_pick_track = []
-            refined_peak_track = []
-            for idx, each_cp in enumerate(res_peaks_track):
-                refined_peak_track.append(each_offset[each_cp-1])
-                score_pick_track.append(res_scores_track[each_cp])
+            refined_peaks_track_s1 = [] # cp location should be character level
+            offset_s1 = start_offset_utt_by_speaker['s1']
 
-            sm = softmax(torch.Tensor(np.array([score_pick_track])))[0].tolist()
+            for idx, each_cp in enumerate(res_peaks_track_s1):
+                refined_peaks_track_s1.append(offset_s1[each_cp-1]) # convert utterance level index to character level index 
+                score_pick_track.append(res_scores_track_s1[each_cp])
 
-            all_peaks_track_refined.append(refined_peak_track)
-            all_scores_sm_cp_track.append(sm)
-            all_scores_cp_track.append(res_scores_track)
+            score_sm_cp_s1 = softmax(torch.Tensor(np.array([score_pick_track])))[0].tolist()
 
-        return all_peaks_track_refined, all_scores_cp_track, all_scores_sm_cp_track
+        # check condition before doing s2
+        if s2_signal.shape[0] != 0:
 
-
+            all_peaks_track_refined = [refined_peaks_track_s1,
+                                        refined_peaks_track_s2]
+            all_scores_pick_softmax_track = [score_sm_cp_s1,
+                                            score_sm_cp_s2]
+        else:
+            # s1 only
+            all_peaks_track_refined = [refined_peaks_track_s1]
+            all_scores_pick_softmax_track = [score_sm_cp_s1]
 
     
     

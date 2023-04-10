@@ -71,9 +71,9 @@ class BaseUCP:
         all_scores_cp_track = []
 
         for each_signal, each_offset in zip(es_signals, es_offset):
-            if each_signal.shape[0] == 0:
+            if each_signal.shape[0] == None:
                 continue
-            
+
             res_scores_track, res_peaks_track = self.detect_cp(each_signal)
 
             if len(res_peaks_track) == 0:

@@ -1,7 +1,7 @@
 from src.utils import Config
 # from .unsupervised_audio_inference import UnsupervisedAudioInference
 from .unsupervised_video_inference import UnsupervisedVideoInference
-from .unsupeervised_audio_inference import UnsupervisedAudioInference
+from .unsupervised_audio_inference import UnsupervisedAudioInference
 from .unsupervised_audio_inference_v1 import UnsupervisedAudioJointInference
 from .unsupervised_text_inference import UnsupervisedTextInference
 

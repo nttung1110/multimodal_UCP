@@ -63,38 +63,13 @@ class BaseUCP:
     def run_for_text(self, es_signals, start_offset_utt_by_speaker):
         print("========Detecting change point from individual ES track===========")
         
-        es_offset = [start_offset_utt_by_speaker['s1'],
-                    start_offset_utt_by_speaker['s2']]
+        # only have s1 or s2 individual
+        s1_signal = es_signals[0]
+        s2_signal = es_signals[1]
 
-        all_peaks_track_refined = []
-        all_scores_sm_cp_track = []
-        all_scores_cp_track = []
-
-        for each_signal, each_offset in zip(es_signals, es_offset):
-            if each_signal.shape[0] == 0:
-                continue
-            
-            res_scores_track, res_peaks_track = self.detect_cp(each_signal)
-
-            if len(res_peaks_track) == 0:
-                # no cp exist
-                continue
-
-            score_pick_track = []
-            refined_peak_track = []
-            for idx, each_cp in enumerate(res_peaks_track):
-                refined_peak_track.append(each_offset[each_cp-1])
-                score_pick_track.append(res_scores_track[each_cp])
-
-            sm = softmax(torch.Tensor(np.array([score_pick_track])))[0].tolist()
-
-            all_peaks_track_refined.append(refined_peak_track)
-            all_scores_sm_cp_track.append(sm)
-            all_scores_cp_track.append(res_scores_track)
-
-        return all_peaks_track_refined, all_scores_cp_track, all_scores_sm_cp_track
-
-
+        # do s1 first since s2 could be None since a few text files might have # in user id
+        res_scores_track_s1, res_peaks_track_s1 = self.detect_cp(s1_signal)
+        
 
     
     
