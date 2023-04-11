@@ -1,4 +1,5 @@
 from .base_audio_extractor import *
+from tqdm import tqdm
 
 from src.utils import Config
 
@@ -106,6 +107,7 @@ class TrillExtractor(BaseExtractor):
 
         # diarization step
         list_offset, length = self._diarize(path_file)
+        pdb.set_trace()
 
         # extract emotion step
         audio = AudioSegment.from_file(path_file) 
@@ -118,7 +120,7 @@ class TrillExtractor(BaseExtractor):
 
         softmax = torch.nn.Softmax(dim=1)
 
-        for a, start, stop in list_offset:
+        for a, start, stop in tqdm(list_offset):
             if (start == None or stop == None or int(stop * 1000) - int(start * 1000) <= 1000):
                 continue
             feat = self._feat_signals(audio, start, stop)
