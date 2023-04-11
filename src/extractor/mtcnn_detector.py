@@ -18,7 +18,5 @@ class MTCNNDetector():
         
     def run(self, frame):
         bounding_boxes, probs = self.model.detect(frame, landmarks=False)
-
-        if bounding_boxes is not None:
-            bounding_boxes = bounding_boxes[probs>self.config.threshold_face] # threshold_face = 0.6
+        
         return bounding_boxes, probs

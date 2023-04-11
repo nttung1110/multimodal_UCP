@@ -2,8 +2,9 @@ import cv2
 import bbox_visualizer as bbv
 import os.path as osp
 import numpy as np
-
+import pdb
 from tqdm import tqdm
+from pathlib import Path
 
 
 class BaseTracker():
@@ -18,6 +19,7 @@ class BaseTracker():
 
         video_name = f_p_in.split('/')[-1]
         debug_vid_path = osp.join(self.config.folder_debug_tracking, video_name)
+        Path(self.config.folder_debug_tracking).mkdir(parents=True, exist_ok=True)
         
         # init video writer
         fourcc = cv2.VideoWriter_fourcc(*'XVID')
@@ -25,10 +27,9 @@ class BaseTracker():
 
         # construct frame writing annotation information dict
         frame_write = {}
-        for idx_track, _ in enumerate(self.all_tracks):
-            cur_track_info = self.all_tracks[idx_track]
+        for idx_track, cur_track_info in self.all_tracks.items():
             cur_track_emotion = self.all_emotion_category_tracks[idx_track]
-            cur_feat = self.all_es_feat_tracks[idx_track]
+            # cur_feat = self.all_es_feat_tracks[idx_track]
 
             if len(cur_track_emotion) != len(cur_track_info['bbox']):
                 assert RuntimeError # misalign emotion prediction and box, check again
@@ -41,9 +42,8 @@ class BaseTracker():
                     frame_write[which_frame] = []
 
                 # annotation text for box writing in frame
-                id = cur_track_info['id']
                 emotion_cat = cur_track_emotion[idx_bbox_track]
-                text_box = str(f'ID:{id}->{emotion_cat}')
+                text_box = str(f'ID:{idx_track}->{emotion_cat}')
 
                 # box writing in frame
                 box = where_face
@@ -51,6 +51,7 @@ class BaseTracker():
 
         for idx, frame in tqdm(enumerate(frames_list)):
             annot_frame = frame
+            annot_frame = cv2.cvtColor(annot_frame, cv2.COLOR_RGB2BGR) 
             if idx in frame_write:
                 # there are box and text need to be written in this frame
                 for (each_box, each_text) in frame_write[idx]:
@@ -67,29 +68,28 @@ class BaseTracker():
     def _create_new_track(self, es_feature, emotion_cat, 
                         bbox, track_id, frames_appear):
         # Initialize a new track
-        new_track = {"bbox": [bbox], "id": track_id, "frames_appear": [frames_appear]}
+        new_box = {"bbox": [bbox], "frames_appear": [frames_appear]}
+        self.all_tracks[track_id] = new_box
 
-        new_es_array_track = np.array([es_feature])
-        new_start_end_offset_track = [frames_appear, frames_appear]  # [start, end]
         new_ec_array_track = np.array([emotion_cat])
-
-        self.all_tracks.append(new_track)
-        self.all_emotion_category_tracks.append(new_ec_array_track)
-        self.all_es_feat_tracks.append(new_es_array_track)
-        self.all_start_end_offset_track.append(new_start_end_offset_track)
+        self.all_emotion_category_tracks[track_id] = new_ec_array_track
+    
+        new_es_array_track = np.array([es_feature])
+        self.all_es_feat_tracks[track_id] = new_es_array_track
+        
+        new_start_end_offset_track = [frames_appear, frames_appear]
+        self.all_start_end_offset_track[track_id] = new_start_end_offset_track
 
     def _update_old_track(self, es_feature, emotion_cat, 
-                        bbox, which_track_id, frames_appear):
+                        bbox, track_id, frames_appear):
+        
+        ## TODO: interpolate features for the missing frames?
         # Update existing track
-        self.all_tracks[which_track_id]['bbox'].append(bbox)
-        self.all_tracks[which_track_id]['frames_appear'].append(frames_appear)
+        self.all_tracks[track_id]['bbox'].append(bbox)
+        self.all_tracks[track_id]['frames_appear'].append(frames_appear)
 
-        time_interpolate = frames_appear - self.all_tracks[which_track_id]['frames_appear'][-2] - 1
-        
-        if time_interpolate > 0:
-            old_rep_track = self.all_es_feat_tracks[which_track_id][-1].tolist()
-            self.all_es_feat_tracks[which_track_id] = np.append(self.all_es_feat_tracks[which_track_id], [old_rep_track] * time_interpolate, axis=0)
-        
-        self.all_es_feat_tracks[which_track_id] = np.append(self.all_es_feat_tracks[which_track_id], [es_feature], axis=0)  # add more feature for this track
-        self.all_start_end_offset_track[which_track_id][-1] = frames_appear  # change index frame
-        self.all_emotion_category_tracks[which_track_id] = np.append(self.all_emotion_category_tracks[which_track_id], [emotion_cat], 0)
+        new_es_array_track = np.array([es_feature])
+        self.all_es_feat_tracks[track_id] = np.concatenate([self.all_es_feat_tracks[track_id], new_es_array_track])
+        self.all_emotion_category_tracks[track_id] = np.concatenate([self.all_emotion_category_tracks[track_id], [emotion_cat]])
+        self.all_start_end_offset_track[track_id][-1] = frames_appear
+

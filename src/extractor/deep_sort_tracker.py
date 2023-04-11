@@ -25,7 +25,8 @@ class DeepSortTracker(BaseTracker):
         self._init_model(cfg)
 
     def _init_model(self, cfg):
-
+        # Extend facial boxes to capture more Re-ID information 
+        self.extend_width, self.extend_height = cfg.extend_width, cfg.extend_height
         print('=========Initializing Deep Sort Tracker Model=========')
         self.min_confidence = cfg.min_confidence
         self.nms_max_overlap = cfg.nms_max_overlap
@@ -125,115 +126,78 @@ class DeepSortTracker(BaseTracker):
         else:
             features = np.array([])
         return features
-    
 
-    def _maintain_track_status(self, track_bboxes, idx_frame):
-        for idx, each_active_tracks in enumerate(track_bboxes):
-            old_idx_frame = each_active_tracks[-1]
-            if idx_frame - old_idx_frame > self.config.threshold_dying_track_len:
-                self.mark_old_track_idx.append(idx)
-
-    def cosine_similarity(self, a, b):
-        dot_product = np.dot(a, b)
-        norm_a = np.linalg.norm(a)
-        norm_b = np.linalg.norm(b)
-        similarity = dot_product / (norm_a * norm_b)
-        return similarity
-
-    def _compute_match_score(self, track_id, es_feature):
-        last_feature = self.all_es_feat_tracks[track_id][-1]
-        last_feature = np.array(last_feature)  # Convert to numpy array
+    def _relocate_face_bbox(self, bbox_tracker, frame):
+        """
+        Since the tracker use an extended box of MTCNN for tracking, this function is 
+        used to restore the box that contains the faces detected by MTCNNN
+        """
+        x1, y1, x2, y2 = bbox_tracker
+        x1, x2 = min(max(0, x1+int(self.extend_width/2)), frame.shape[1]), min(max(0, x2-int(self.extend_width/2)), frame.shape[1])
+        y1, y2 = min(max(0, y1+int(self.extend_height/2)), frame.shape[0]), min(max(0, y2-int(self.extend_height/2)), frame.shape[0])
         
-        try:
-            sim = self.cosine_similarity(last_feature.reshape(1, -1), np.array(es_feature).reshape(1, -1).T)
-        except:
-            pdb.set_trace()
-        if sim >= self.config.similarity_threshold:
-            return sim
-        else:
-            return -1
-    
-    def _match_and_update_track(self, bbox, es_feature):
-        similar_track_ids = []
-        for idx, each_active_tracks in enumerate(self.all_tracks):
-            if idx in self.mark_old_track_idx:
-                continue
-
-            # Compute the intersection over union (IoU) between the new bbox and the latest bbox of each existing track
-            iou = self.bbox_iou(bbox, each_active_tracks['bbox'][-1])
-
-            # If the IoU is above a threshold, add the existing track to the list of similar tracks
-            if iou > self.config.iou_threshold:
-                similar_track_ids.append(idx)
-
-        if len(similar_track_ids) > 0:
-            # If there are similar tracks, update the one with the highest score
-            best_match_score = -1
-            for track_id in similar_track_ids:
-                score = self._compute_match_score(track_id, es_feature)
-                if score > best_match_score:
-                    best_match_score = score
-                    best_match_track_id = track_id
-
-        return best_match_track_id, best_match_score
-    
-
-    def _check_exist_track(self, track_id):
-        where_track_id = None
-        for idx, _ in enumerate(self.all_tracks):
-            each_active_tracks = self.all_tracks[idx]
-            if each_active_tracks['id'] == track_id:
-                where_track_id = idx
-                break
-
-        return where_track_id
-
-    
+        return [x1,y1,x2,y2]
+        
     def _create_or_update(self, track_bboxes, emot_extractor, idx_frame, frame):
         for track in track_bboxes:
             x1, y1, x2, y2, track_id = track
             
             bbox_tracker = [x1,y1,x2,y2]
+            bbox_face_detector = self._relocate_face_bbox(bbox_tracker, frame)
             
             # extract emotion feature
-            _, es_feature, emotion_cat = emot_extractor.run(frame, bbox_tracker)
+            _, es_feature, emotion_cat = emot_extractor.run(frame, bbox_face_detector)
 
-            exist_track_id = self._check_exist_track(track_id)
-            if exist_track_id is None:
+            if track_id not in list(self.all_tracks.keys()):
                 # create new track
                 self._create_new_track(es_feature, emotion_cat, 
-                                     bbox_tracker, track_id, idx_frame)
+                                     bbox_face_detector, track_id, idx_frame)
                 
             else:
                 # update new track
                 self._update_old_track(es_feature, emotion_cat,
-                                       bbox_tracker, exist_track_id, idx_frame)
+                                       bbox_face_detector, track_id, idx_frame)
 
-    
+    def _init_list_record(self):
+        self.all_tracks = {}
+
+        self.all_emotion_category_tracks = {}
+        self.all_es_feat_tracks = {}
+        self.all_start_end_offset_track = {}
+        
     def _filter_tracks(self):
         # filter those tracks having length smaller than a number
+        
         all_es_feat_tracks_filter = []
         all_start_end_offset_track_filter = []
         all_emotion_category_tracks_filter = []
 
-        for es_feat_track, se_track, ec_track in zip(self.all_es_feat_tracks, 
-                                                     self.all_start_end_offset_track, 
-                                                     self.all_emotion_category_tracks):
-            length = es_feat_track.shape[-1]
+        for es_feat_track, se_track, ec_track, track in zip(self.all_es_feat_tracks.values(), 
+                                                            self.all_start_end_offset_track.values(), 
+                                                            self.all_emotion_category_tracks.values(), 
+                                                            self.all_tracks.values()):
+            
+            length = es_feat_track.shape[0] # length of the track (in frames)
+            
             if length >= self.config.len_face_tracks:
                 all_es_feat_tracks_filter.append(es_feat_track)
                 all_start_end_offset_track_filter.append(se_track)
                 all_emotion_category_tracks_filter.append(ec_track)
+                all_tracks_filter.append(track)
 
         return all_es_feat_tracks_filter, all_start_end_offset_track_filter, all_emotion_category_tracks_filter
-
-    def _init_list_record(self):
-        self.all_tracks = []
-        self.mark_old_track_idx = []
-
-        self.all_emotion_category_tracks = []
-        self.all_es_feat_tracks = []
-        self.all_start_end_offset_track = []
+        
+    def convert_bbox_xyxy_to_xywh(self, bbox_list_xyxy):
+        bbox_list_xywh = []
+        for bbox_xyxy in bbox_list_xyxy:
+            x_min, y_min, x_max, y_max = bbox_xyxy
+            bbox_w = x_max - x_min
+            bbox_h = y_max - y_min
+            bbox_xc = x_min + bbox_w / 2
+            bbox_yc = y_min + bbox_h / 2
+            bbox_xywh = [bbox_xc, bbox_yc, bbox_w+self.extend_width, bbox_h+self.extend_height]
+            bbox_list_xywh.append(bbox_xywh)
+        return bbox_list_xywh
 
     def run(self, video, face_detector, emot_extractor, f_p_in):
         self._init_list_record()
@@ -248,32 +212,20 @@ class DeepSortTracker(BaseTracker):
             bboxes, probs = face_detector.run(frame)
                         
             if bboxes is None:
+                # print("No faces found!")
                 continue
             
             # Track the objects using DeepSORT
-            ## first convert xyxy to xc|yc|wh
-            # TO DO: Put this in a separate function
-            print('pre:', bboxes)
-            for idx, box in enumerate(bboxes):
-                [x1, y1, x2, y2] = box
-
-                width = x2 - x1
-                height = y2 - y1
-
-                xc = (x1 + width/2)
-                yc = (y1 + height/2)
-
-                bboxes[idx] = [xc, yc, width, height]
-
-            track_bboxes = self.update(bboxes, probs, frame)
-            print('af:', track_bboxes)
-
-            # pre: [[210.43867 146.40266 260.769   200.92578]]
-
-            # # Stage 1: Maintaining track status to kill inactive track
-            # self._maintain_track_status(track_bboxes, idx_frame)
-
-            # Stage 2: Assign new boxes to currently active tracks or create a new track if there are no active tracks
+            ## Convert the face box xyxy to xc|yc|wh and extend the box by self.extend_width, self.extend_height units 
+            bboxes_xywh = np.array(self.convert_bbox_xyxy_to_xywh(bboxes))
+            
+            ## Update deepsort 
+            track_bboxes = self.update(bboxes_xywh, probs, frame)
+            
+            if len(track_bboxes) == 0:
+                # print("Can't assign tracker!")
+                continue
+            
             self._create_or_update(track_bboxes, emot_extractor, idx_frame, frame)
 
             # debug mode
@@ -283,7 +235,6 @@ class DeepSortTracker(BaseTracker):
                                           video.fps, video.w, video.h)
                     break
         
-        pdb.set_trace()
         # get final result
         all_es, all_se_offset, all_emot_cat = self._filter_tracks()
 

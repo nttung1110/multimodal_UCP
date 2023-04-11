@@ -25,7 +25,7 @@ class HSEEmotExtractor():
         # print(box)
         x1, x2  = min(max(0, x1), frame.shape[1]), min(max(0, x2), frame.shape[1]) # replace with clip?
         y1, y2 = min(max(0, y1), frame.shape[0]), min(max(0, y2), frame.shape[0])
-        face_imgs = frame[y1:y2, x1:x2]
+        face_imgs = frame[min(y1, y2):max(y1, y2), min(x1, x2):max(x1, x2)]
         try:
             emotion, scores = self.model.predict_emotions(face_imgs, logits=True)
 
@@ -37,5 +37,5 @@ class HSEEmotExtractor():
         except:
             print('Possibly invalid face coordinates')
             raise RuntimeError
-            # pdb.set_trace()
+            pdb.set_trace()
         

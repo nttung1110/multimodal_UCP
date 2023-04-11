@@ -1,25 +1,25 @@
 tracker:
   name: deepsort
 
+  # DEEPSORT CONFIGS
   is_debug: True
   model_path: checkpoint_deep_sort/ckpt.t7
   model_config: None
-  max_dist: 0.2
-  min_confidence: 0.3
-  nms_max_overlap: 1.0
-  max_iou_distance: 0.7
-  max_age: 70
-  n_init: 3
-  nn_budget: 100
+  max_dist: 0.3 # maximum distance between a detected object and a track in order for them to be considered a match
+  min_confidence: 0.6 # minimum confidence threshold for accepting detections
+  nms_max_overlap: 1.0 # maximum overlap allowed between two detections, used to remove duplicate detections that occur when an object is detected by multiple overlapping bounding boxes
+  max_iou_distance: 0.6 # maximum intersection-over-union (IOU) distance for matching tracks with detections
+  max_age: 100 # maximum number of frames that a track can exist without receiving a detection before it is deleted, used to remove tracks that are no longer being detected
+  n_init: 4 # the number of frames that a track must be detected in before it is considered a valid track
+  nn_budget: 50 #  the maximum number of tracks that can be maintained by the algorithm at any given time
   use_cuda: True
-  iou_threshold: 0.5
-  similarity_threshold: 0.8
 
-  skip_frame: 3
-  threshold_dying_track_len: 30
-  threshold_iou_min_track: 0.4
-  len_face_tracks: 30
+  # VISUAL ES EXTRACTOR CONFIGS
+  video_length: 300 # seconds (~ approximation)
+  skip_frame: 1
+  len_face_tracks: 75 # 75 frames at 25 fps = 3 seconds
+  extend_width: 20
+  extend_height: 100 # extend the height to capture more information about the person
 
-  is_debug: True
   folder_debug_tracking: './debug_tracking_ds'
-  max_frame_debug: 400
+  max_frame_debug: 1500

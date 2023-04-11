@@ -38,9 +38,6 @@ class UnsupervisedVideoInference():
             # Recording processing time
             start = datetime.now()
 
-            if 'AJ9' not in f_p_in:
-                continue
-
             # read video
             video = VideoFileClip(f_p_in)
             video_num_frames = int(video.fps * video.duration)

@@ -4,6 +4,6 @@ detector:
   keep_all: False
   post_process: False
   min_face_size: 40
-  device: 'cuda:1'
+  device: 'cuda:0'
   threshold_face: 0.6
 
