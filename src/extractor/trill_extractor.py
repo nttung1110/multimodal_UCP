@@ -33,12 +33,14 @@ class TrillExtractor(BaseExtractor):
 
         os.environ["TFHUB_CACHE_DIR"] = "./tmp"
         print("========Loading Trill Audio model==============")
-        gpu = tf.config.experimental.list_physical_devices('GPU')[0]
-        tf.config.experimental.set_memory_growth(gpu, True)
-        tf.config.set_visible_devices(gpu, 'GPU')
+        pdb.set_trace()
+        # gpu = tf.config.experimental.list_physical_devices('GPU')[0]
+        # tf.config.experimental.set_memory_growth(gpu, True)
+        # tf.config.set_visible_devices(gpu, 'GPU')
         
         with tf.device('/device:GPU:1'):
             self.module = hub.load(self.config.path_url_trill)
+        # self.module = hub.load(self.config.path_url_trill)
             
 
     def _feat_signals(self, audio, start, stop):
@@ -105,9 +107,11 @@ class TrillExtractor(BaseExtractor):
                 CP at the same time for better inference time 
         """
 
+        # disabling gpu 
+        # os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
         # diarization step
-        list_offset, length = self._diarize(path_file)
         pdb.set_trace()
+        list_offset, length = self._diarize(path_file)
 
         # extract emotion step
         audio = AudioSegment.from_file(path_file) 
@@ -123,7 +127,10 @@ class TrillExtractor(BaseExtractor):
         for a, start, stop in tqdm(list_offset):
             if (start == None or stop == None or int(stop * 1000) - int(start * 1000) <= 1000):
                 continue
-            feat = self._feat_signals(audio, start, stop)
+            try:
+                feat = self._feat_signals(audio, start, stop)
+            except:
+                pdb.set_trace()
             feat = np.transpose(feat.cpu().numpy())
             
             len_signal = feat.shape[0]

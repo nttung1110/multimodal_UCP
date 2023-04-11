@@ -48,8 +48,10 @@ class UnsupervisedVideoInference():
                 All-in-one process:
                     + Extracting and detecting faces while performing tracking
             '''
-            video_es_signals, video_es_offset, _ = tracker.run(video, face_detector, emot_extractor, f_p_in)
+            video_es_cat, video_all_track = [], []
+            video_es_signals, video_es_offset, video_es_cat, video_all_track  = tracker.run(video, face_detector, emot_extractor, f_p_in)
 
+            pdb.set_trace()
             exist_signal = (len(video_es_signals) != 0)
             exist_cp = False
 
@@ -96,7 +98,9 @@ class UnsupervisedVideoInference():
                         'time_processing': int(time_processing.total_seconds()),
                         "fps": int(video_fps), 
                         "individual_cp_result": individual_cp,
-                        "stat_segment_seconds_total_cp_accum": res_stat
+                        "stat_segment_seconds_total_cp_accum": res_stat,
+                        "video_es_cat" : video_es_cat,
+                        "video_all_track" : video_all_track
                         }
             
             with open(f_p_out, 'w') as fp:

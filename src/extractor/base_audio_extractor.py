@@ -30,9 +30,11 @@ class BaseExtractor:
             print("The function needs wav file as input", ext)
             return 1
         audio_name = filename.split('\\')[-1]
+        import pdb
+        pdb.set_trace()
         
         #Speaker diarization pipeline
-        diarization = self.pipeline(f"{filename}.wav")
+        diarization = self.pipeline(f"{filename}.wav", min_speakers=2, max_speakers=5)
         list_offset, length = [], []
 
         #Extract start, stop, and duration of each track

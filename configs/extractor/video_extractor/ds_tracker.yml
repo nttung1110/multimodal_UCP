@@ -2,16 +2,16 @@ tracker:
   name: deepsort
 
   # DEEPSORT CONFIGS
-  is_debug: True
+  is_debug: False
   model_path: checkpoint_deep_sort/ckpt.t7
   model_config: None
   max_dist: 0.3 # maximum distance between a detected object and a track in order for them to be considered a match
-  min_confidence: 0.6 # minimum confidence threshold for accepting detections
+  min_confidence: 0.7 # minimum confidence threshold for accepting detections
   nms_max_overlap: 1.0 # maximum overlap allowed between two detections, used to remove duplicate detections that occur when an object is detected by multiple overlapping bounding boxes
   max_iou_distance: 0.6 # maximum intersection-over-union (IOU) distance for matching tracks with detections
-  max_age: 100 # maximum number of frames that a track can exist without receiving a detection before it is deleted, used to remove tracks that are no longer being detected
-  n_init: 4 # the number of frames that a track must be detected in before it is considered a valid track
-  nn_budget: 50 #  the maximum number of tracks that can be maintained by the algorithm at any given time
+  max_age: 200 # maximum number of frames that a track can exist without receiving a detection before it is deleted, used to remove tracks that are no longer being detected
+  n_init: 10 # the number of frames that a track must be detected in before it is considered a valid track
+  nn_budget: 20 #  the maximum number of tracks that can be maintained by the algorithm at any given time
   use_cuda: True
 
   # VISUAL ES EXTRACTOR CONFIGS
@@ -22,4 +22,4 @@ tracker:
   extend_height: 100 # extend the height to capture more information about the person
 
   folder_debug_tracking: './debug_tracking_ds'
-  max_frame_debug: 1500
+  max_frame_debug: 3000

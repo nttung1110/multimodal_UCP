@@ -7,4 +7,4 @@ extractor:
   min_length_audio_signal: 20
 
   path_url_trill: 'https://tfhub.dev/google/nonsemantic-speech-benchmark/trill/3'
-  auth_token: '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'
+  auth_token: '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'

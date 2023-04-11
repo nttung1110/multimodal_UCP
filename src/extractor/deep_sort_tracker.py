@@ -171,6 +171,7 @@ class DeepSortTracker(BaseTracker):
         all_es_feat_tracks_filter = []
         all_start_end_offset_track_filter = []
         all_emotion_category_tracks_filter = []
+        all_tracks_filter = []
 
         for es_feat_track, se_track, ec_track, track in zip(self.all_es_feat_tracks.values(), 
                                                             self.all_start_end_offset_track.values(), 
@@ -185,7 +186,7 @@ class DeepSortTracker(BaseTracker):
                 all_emotion_category_tracks_filter.append(ec_track)
                 all_tracks_filter.append(track)
 
-        return all_es_feat_tracks_filter, all_start_end_offset_track_filter, all_emotion_category_tracks_filter
+        return all_es_feat_tracks_filter, all_start_end_offset_track_filter, all_emotion_category_tracks_filter, all_tracks_filter
         
     def convert_bbox_xyxy_to_xywh(self, bbox_list_xyxy):
         bbox_list_xywh = []
@@ -236,9 +237,9 @@ class DeepSortTracker(BaseTracker):
                     break
         
         # get final result
-        all_es, all_se_offset, all_emot_cat = self._filter_tracks()
+        all_es, all_se_offset, all_emot_cat, all_track = self._filter_tracks()
 
-        return all_es, all_se_offset, all_emot_cat
+        return all_es, all_se_offset, all_emot_cat, all_track
 
 
 
