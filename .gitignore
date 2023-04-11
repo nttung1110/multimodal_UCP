@@ -14,6 +14,7 @@ results*
 gcloud_json
 EVAL*
 
+.history/
 *.jpg
 *.json
 tmp/

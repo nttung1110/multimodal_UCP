@@ -8,4 +8,4 @@ extractor:
   freeze: False
   sample: 1.0
   pretrained_model_ckpt: './checkpoint_text/model.bin'
-  len_utt_tracks: 25
+  len_utt_tracks: 15

@@ -14,16 +14,17 @@ class BaseUCP:
     def __init__(self, config: Config):
         self.config = config
         # init model, pass for the inheritance class
+        self._init_model()
 
-    def detect_cp(self, data):
-
-        cpd = OnlineNNRuLSIF(net=self.config.net, scaler=self.config.scaler, metric=self.config.metric, 
+    def _init_model(self):
+        self.cpd = OnlineNNRuLSIF(net=self.config.net, scaler=self.config.scaler, metric=self.config.metric, 
                             periods=self.config.periods, window_size=self.config.window_size,
                             lag_size=self.config.lag_size, step=self.config.step, 
                             n_epochs=self.config.n_epochs, lr=self.config.lr, lam=self.config.lam, 
                             optimizer=self.config.optimizer, alpha=self.config.alpha)
-        
-        scores, peaks = cpd.predict(data)
+    
+    def detect_cp(self, data):
+        scores, peaks = self.cpd.predict(data)
 
         return scores, peaks
 
@@ -71,11 +72,9 @@ class BaseUCP:
         all_scores_cp_track = []
 
         for each_signal, each_offset in zip(es_signals, es_offset):
-            if each_signal.shape[0] == 0:
+            if each_signal.shape[0] == 0 or each_signal.shape[0] < self.config.len_utt_tracks:
                 continue
-            
             res_scores_track, res_peaks_track = self.detect_cp(each_signal)
-
             if len(res_peaks_track) == 0:
                 # no cp exist
                 continue
