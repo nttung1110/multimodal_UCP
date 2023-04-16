@@ -3,7 +3,6 @@
 
 ```
 conda create --name multimodal_ucp python==3.8
-pip install --upgrade pip
 pip install -r requirements.txt
 pip install fastreid
 ```
