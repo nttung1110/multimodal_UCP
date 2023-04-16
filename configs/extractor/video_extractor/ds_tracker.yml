@@ -15,7 +15,7 @@ tracker:
   use_cuda: True
 
   # VISUAL ES EXTRACTOR CONFIGS
-  skip_frame: 1
+  skip_frame: 3
   len_face_tracks: 10 # 75 frames at 25 fps = 3 seconds
 
   folder_debug_tracking: './results/debug_tracking_ds'
