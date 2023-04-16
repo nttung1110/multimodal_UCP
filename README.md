@@ -58,5 +58,5 @@ You also need to change the path to the video data in ```configs/data/video.yml`
 
 Run the script once you have done with configuration selection in bash file:
 ```
-bash scripts/video_inference/{name_file}.sh
+bash scripts/video_scripts/{TYPE_OF_INFERENCE_DATA}/{name_file}.sh
 ```
