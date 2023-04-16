@@ -30,7 +30,8 @@ class VisualEmotionCombinedExtractor():
         # Extract facial visual features
         embedding_objs = DeepFace.represent(face_imgs, model_name = self.config.visual_model_name, enforce_detection = self.config.enforce_detection)
         visual_features = np.array(embedding_objs[0]["embedding"])
-       
+
+        pdb.set_trace()
         emotion, scores = self.model.predict_emotions(face_imgs, logits=True)
 
         scores = self.softmax(torch.Tensor(np.array([scores])))

@@ -15,7 +15,7 @@ class VideoCSVLoader(BasefolderLoader):
         # pdb.set_trace()
         df = pd.read_csv(self.cfg.data.path_input_folder)
         
-        for idx, row in df.head(4).iterrows():
+        for idx, row in df.iterrows():
             f_name_no_ext = row['segment_id']
             
             file_path_in = row['file_path']
