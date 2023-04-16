@@ -23,7 +23,7 @@ In terms of the flow, the inference pipeline for three different modalities are 
 
 
 ## How to run
-All experiment is executed via bash file located in ```scripts```. Note that there are two types of video bash file. It depends on how you want to load the data, whether it is a csv file containing all of the information about video, or a video folder.
+All experiments are executed via bash file located in ```scripts```. Note that there are two types of video bash file. It depends on how you want to load the data, whether it is a csv file containing all of the information about video, or a video folder.
 
 ### Video
 In total, we have experimented through 8 different combinations for change point video inference:
