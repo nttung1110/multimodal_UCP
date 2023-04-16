@@ -3,13 +3,9 @@
 
 ```
 conda create --name multimodal_ucp python==3.8
-conda env update -n multimodal_ucp --file environment.yml
-
-# These are installed independently for avoiding conflicts
-pip3 install torch==1.11.0+cu113 torchvision==0.12.0+cu113 torchaudio===0.11.0+cu113 -f https://download.pytorch.org/whl/cu113/torch_stable.html
-
+pip install --upgrade pip
 pip install -r requirements.txt
-
+pip install fastreid
 ```
 
 ## Overview
@@ -24,6 +20,10 @@ In terms of the flow, the inference pipeline for three different modalities are 
 
 ## How to run
 All experiments are executed via bash files located in ```scripts```. Note that there are two types of video bash files. It depends on how you want to load the data, whether it is a csv file containing all of the information about video, or a video folder.
+
+Checkpoints (you won't have to download the checkpoints unless you want to experiment these extractors):
+- [Default deepsort extractor](https://drive.google.com/file/d/1_qwTWdzT9dWNudpusgKavj_4elGgbkUN/view?usp=sharing)
+- [Checkpoint for text modality](https://drive.google.com/file/d/18ROp7W-L1k81-YcZ-0amS8PugLt4B04b/view?usp=sharing)
 
 ### Video
 In total, we have experimented through 8 different combinations for change point video inference:
@@ -59,4 +59,9 @@ You also need to change the path to the video data in ```configs/data/video.yml`
 We have experimented through different combinations of component to select the optimal one for usage. You could execute that one as follows or you could choose your own combination following above instructions:
 ```
 bash scripts/video_scripts/inference_on_csv/detector_retinaface-tracker_deepsort-extractor_emotion-inference.sh
+```
+
+To do the inference on video, use:
+```
+bash scripts/video_scripts/inference_on_video/detector_retinaface-tracker_deepsort-extractor_emotion-inference.sh
 ```
