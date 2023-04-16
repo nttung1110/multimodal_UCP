@@ -52,6 +52,6 @@ $emotional_signal_extractor_yml$ \
 
 It is required to specify components of inference pipeline: which detector, which tracker, … You could find these yaml files in config folder where we have already configured to choose good parameters in our experiment. You can also refer to comments we made for each param in config file for further information and change them if you want
 
-A few examples of video inference script that we have prepared could also be found in scripts/video_scripts/
+A few examples of video inference script that we have prepared could also be found in ```scripts/video_scripts/```
 
 
