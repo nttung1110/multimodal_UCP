@@ -56,7 +56,7 @@ A few examples of video inference script that we have prepared could also be fou
 
 You also need to change the path to the video data in ```configs/data/video.yml``` or ```configs/data/video_csv.yml```
 
-Run the script once you have done with configuration selection in bash file:
+We have experimented through different combinations of component and select the optimal one for usage. You could execute that one as follows or you could choose your own combination following above instructions:
 ```
-bash scripts/video_scripts/{TYPE_OF_INFERENCE_DATA}/{name_file}.sh
+bash scripts/video_scripts/inference_on_csv/detector_retinaface-tracker_deepsort-extractor_emotion-inference.sh
 ```
