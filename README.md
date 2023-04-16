@@ -17,13 +17,26 @@ The Unsupervised Change Point (UCP) algorithm consists of three main steps:
 
 In terms of the flow, the inference pipeline for three different modalities are the same. The only difference lies in detailed implementation of each aforementioned component. Therefore, it is essential to specify what components are used for each type of inference pipeline. Here we have three types of pipeline corresponding to 3 different modalities: video, text, audio.
 
-
-## How to run
-All experiments are executed via bash files located in ```scripts```. Note that there are two types of video bash files. It depends on how you want to load the data, whether it is a csv file containing all of the information about video, or a video folder.
+## Data & checkpoints
 
 Checkpoints (you won't have to download the checkpoints unless you want to experiment these extractors):
 - [Default deepsort extractor](https://drive.google.com/file/d/1_qwTWdzT9dWNudpusgKavj_4elGgbkUN/view?usp=sharing)
 - [Checkpoint for text modality](https://drive.google.com/file/d/18ROp7W-L1k81-YcZ-0amS8PugLt4B04b/view?usp=sharing)
+
+Data folder structure:
+```
+EVAL_LDC2023E07/
+├── PREPROCESSED_AUDIO/
+├── PREPROCESSED_TEXT/
+└── PREPROCESSED_VIDEO/
+    ├── csv/
+    └── video/
+```
+
+The csv files can be found at this [drive](https://drive.google.com/drive/folders/1rZv0MqZtGlL4ikeitdWtARDqPefJp1Wc?usp=sharing). 
+
+## How to run
+All experiments are executed via bash files located in ```scripts```. Note that there are two types of video bash files. It depends on how you want to load the data, whether it is a csv file containing all of the information about video, or a video folder.
 
 ### Video
 In total, we have experimented through 8 different combinations for change point video inference:
