@@ -3,6 +3,9 @@ from src.utils import Config
 
 import numpy as np
 import pdb
+from tqdm import tqdm
+
+e = 0.0000000001
 
 class VideoCPAggregator(BaseCPAggregator):
     def __init__(self, config: Config):
@@ -54,6 +57,9 @@ class VideoCPAggregator(BaseCPAggregator):
                 continue
 
             g = h[i] - h[i-1]
+
+            if int(g) == 0:
+                continue # this segment does not have change point
             sum_score = score[i] - score[i-1]
 
             total_change_point_list.append(int(g))
@@ -88,9 +94,9 @@ class VideoCPAggregator(BaseCPAggregator):
         # convert refined peak indices to binary matrix
         binary_cp_matrix = np.zeros((len(all_refined_peaks_track), video_num_frames))
         score_cp_matrix = np.zeros((len(all_refined_peaks_track), video_num_frames))
-
+        print("========Running UCP segmentation and aggregation to get the final results===========")
         # num track x num frames
-        for idx_track, each_track in enumerate(all_refined_peaks_track):
+        for idx_track, each_track in tqdm(enumerate(all_refined_peaks_track), total=len(all_refined_peaks_track)):
             # print(all_refined_peaks_track)
             for i, each_cp_index in enumerate(each_track):
                 try:

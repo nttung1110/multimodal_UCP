@@ -4,6 +4,7 @@ import pdb
 import torch
 import matplotlib.pyplot as plt
 import numpy as np
+from tqdm import tqdm
 
 # from utils.visualise import display_signal
 softmax = torch.nn.Softmax(dim=1)
@@ -31,12 +32,13 @@ class BaseUCP:
     def run(self, es_signals):
         # se_track is only apply for video to keep track of the offset of track
         print("========Detecting change point from individual ES track===========")
-
+        print("Number of tracks: ", len(es_signals))
+        
         all_scores_cp_track = []
         all_peaks_cp_track = []
         all_scores_sm_cp_track = []
 
-        for each_signal in es_signals:
+        for each_signal in tqdm(es_signals):
             if each_signal.shape[0] == 0:
                 continue
             res_scores_track, res_peaks_track = self.detect_cp(each_signal)
@@ -57,6 +59,7 @@ class BaseUCP:
             all_scores_cp_track.append(res_scores_track)
             all_peaks_cp_track.append(res_peaks_track)
             all_scores_sm_cp_track.append(sm)
+        
 
         return all_peaks_cp_track, all_scores_cp_track, all_scores_sm_cp_track
     

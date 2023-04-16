@@ -1,0 +1,8 @@
+extractor:
+  # Visual face extractor
+  name: visual_emotion_combined
+  visual_model_name: Facenet512
+  enforce_detection: False
+
+ # Emotion face extractor
+  emotion_model_name: enet_b0_8_best_afew

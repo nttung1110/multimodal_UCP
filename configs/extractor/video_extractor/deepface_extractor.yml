@@ -1,0 +1,4 @@
+extractor:
+  name: deepface
+  model_name: Facenet512
+  enforce_detection: False

@@ -1,0 +1,7 @@
+output_dir: ./results/results_video_positive_data_from_csv/
+data:
+  name: video_csv
+
+  path_input_folder: ./EVAL_LDC2023E07/PREPROCESSED_VIDEO/csv/positive_data.csv
+  path_save_json: video_cp_out
+  

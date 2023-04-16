@@ -1,3 +1,4 @@
+output_dir: ./results/results_video_EVAL/
 data:
   name: video_folder
 

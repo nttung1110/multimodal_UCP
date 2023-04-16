@@ -27,7 +27,7 @@ class UnsupervisedVideoInference():
         # get all essential components
         video_loader = get_loader(self.config)
         face_detector = get_detector(self.config)
-        tracker = get_tracker(self.config)
+        
         emot_extractor = get_extractor(self.config)
         aggregator = get_aggregator(self.config)
         ucp = get_ucp(self.config)
@@ -35,6 +35,10 @@ class UnsupervisedVideoInference():
         video_data = video_loader.get_list_item()
 
         for (f_p_in, f_p_out, start_second) in tqdm(video_data): # start second for each video segment in a large video
+            
+            if os.path.exists(f_p_out):
+                print(f"Skipping: {f_p_out}, results are available")
+                continue
             # Recording processing time
             start = datetime.now()
 
@@ -48,10 +52,9 @@ class UnsupervisedVideoInference():
                 All-in-one process:
                     + Extracting and detecting faces while performing tracking
             '''
-            video_es_cat, video_all_track = [], []
-            video_es_signals, video_es_offset, video_es_cat, video_all_track  = tracker.run(video, face_detector, emot_extractor, f_p_in)
+            tracker = get_tracker(self.config)
+            video_es_signals, video_es_offset, video_es_cat = tracker.run(video, face_detector, emot_extractor, f_p_in)
 
-            pdb.set_trace()
             exist_signal = (len(video_es_signals) != 0)
             exist_cp = False
 
@@ -84,6 +87,7 @@ class UnsupervisedVideoInference():
                         all_refined_scores_sm_track.append(sm_score_track)
 
                     # aggregate to find final change point
+                    
                     res_cp, res_score, res_stat, individual_cp = aggregator.run(all_refined_peaks_track, all_refined_scores_sm_track,
                                                                                 video_num_frames, video_fps, start_second)
 
@@ -98,9 +102,7 @@ class UnsupervisedVideoInference():
                         'time_processing': int(time_processing.total_seconds()),
                         "fps": int(video_fps), 
                         "individual_cp_result": individual_cp,
-                        "stat_segment_seconds_total_cp_accum": res_stat,
-                        "video_es_cat" : video_es_cat,
-                        "video_all_track" : video_all_track
+                        "stat_segment_seconds_total_cp_accum": res_stat
                         }
             
             with open(f_p_out, 'w') as fp:

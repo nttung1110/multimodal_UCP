@@ -4,7 +4,7 @@ from fastreid.config import get_cfg
 from fastreid.engine import DefaultTrainer
 from fastreid.utils.checkpoint import Checkpointer
 from scipy.optimize import linear_sum_assignment as linear_assignment
-
+from deepface import DeepFace
 import pdb
 import torch
 import torchvision.transforms as transforms
@@ -26,14 +26,17 @@ class DeepSortTracker(BaseTracker):
 
     def _init_model(self, cfg):
         # Extend facial boxes to capture more Re-ID information 
-        self.extend_width, self.extend_height = cfg.extend_width, cfg.extend_height
+        # self.extend_width, self.extend_height = cfg.extend_width, cfg.extend_height
         print('=========Initializing Deep Sort Tracker Model=========')
         self.min_confidence = cfg.min_confidence
         self.nms_max_overlap = cfg.nms_max_overlap
 
-        self.extractor = Extractor(cfg.model_path, use_cuda=cfg.use_cuda)
+        if cfg.reid_feature_extractor == "deepface_extractor":
+            self.extractor = DeepFaceExtractor(cfg.model_name, cfg.enforce_detection)
+        elif cfg.reid_feature_extractor == "default_ds_extractor":
+            self.extractor = Extractor(cfg.model_path, use_cuda=cfg.use_cuda)
         max_cosine_distance = cfg.max_dist
-        metric = NearestNeighborDistanceMetric("cosine", max_cosine_distance, cfg.nn_budget)
+        metric = NearestNeighborDistanceMetric(cfg.distance_metric, max_cosine_distance, cfg.nn_budget)
         self.tracker = Tracker(metric, max_iou_distance=cfg.max_iou_distance, max_age=cfg.max_age, n_init=cfg.n_init)
 
     def update(self, bbox_xywh, confidences, ori_img):
@@ -56,7 +59,6 @@ class DeepSortTracker(BaseTracker):
         # output bbox identities
         outputs = []
 
-        # pdb.set_trace()
         for track in self.tracker.tracks:
             if not track.is_confirmed() or track.time_since_update > 1:
                 continue
@@ -67,8 +69,7 @@ class DeepSortTracker(BaseTracker):
         if len(outputs) > 0:
             outputs = np.stack(outputs,axis=0)
         return outputs
-
-
+    
     """
     TODO:
         Convert bbox from xc_yc_w_h to xtl_ytl_w_h
@@ -127,6 +128,16 @@ class DeepSortTracker(BaseTracker):
             features = np.array([])
         return features
 
+    def _get_features_single_face(self, bbox, ori_img):
+        x1,y1,x2,y2 = bbox
+        im_crops = ori_img[y1:y2,x1:x2]
+        
+        try:
+            features = self.extractor(im_crops)
+        except:
+            features = np.array([])
+        return features
+
     def _relocate_face_bbox(self, bbox_tracker, frame):
         """
         Since the tracker use an extended box of MTCNN for tracking, this function is 
@@ -136,18 +147,41 @@ class DeepSortTracker(BaseTracker):
         x1, x2 = min(max(0, x1+int(self.extend_width/2)), frame.shape[1]), min(max(0, x2-int(self.extend_width/2)), frame.shape[1])
         y1, y2 = min(max(0, y1+int(self.extend_height/2)), frame.shape[0]), min(max(0, y2-int(self.extend_height/2)), frame.shape[0])
         
+        if y1 == y2:
+            y1 = 0
+        
         return [x1,y1,x2,y2]
+    
         
     def _create_or_update(self, track_bboxes, emot_extractor, idx_frame, frame):
         for track in track_bboxes:
             x1, y1, x2, y2, track_id = track
-            
             bbox_tracker = [x1,y1,x2,y2]
-            bbox_face_detector = self._relocate_face_bbox(bbox_tracker, frame)
+            # if idx_frame // 25 == 1:
+            #     pdb.set_trace()
+            #     cv2.imwrite("face1.png",frame[y1:y2,x1:x2])
+            #     embedding_objs = DeepFace.represent(frame[y1:y2,x1:x2], model_name = 'Facenet512', enforce_detection = False)
+            #     with open('face1.txt', 'w') as file:
+            #         file.write(' '.join(str(x) for x in embedding_objs[0]["embedding"]))
+            # if idx_frame // 25 == 4:
+            #     pdb.set_trace()
+            #     cv2.imwrite("face2.png",frame[y1:y2,x1:x2])
+            #     embedding_objs = DeepFace.represent(frame[y1:y2,x1:x2], model_name = 'Facenet512', enforce_detection = False)
+            #     with open('face2.txt', 'w') as file:
+            #         file.write(' '.join(str(x) for x in embedding_objs[0]["embedding"]))
+                
+            # cv2.imwrite("retinaface.png", frame[y1:y2,x1:x2]
+            # result = DeepFace.verify(img1_path = "face1.png", img2_path = "face2.png", distance_metric = 'cosine', enforce_detection=False)
+                
+            # bbox_face_detector = self._relocate_face_bbox(bbox_tracker, frame)
+            bbox_face_detector = bbox_tracker
             
             # extract emotion feature
-            _, es_feature, emotion_cat = emot_extractor.run(frame, bbox_face_detector)
-
+            try:
+                _, es_feature, emotion_cat = emot_extractor.run(frame, bbox_face_detector)
+            except:
+                pdb.set_trace()             
+                   
             if track_id not in list(self.all_tracks.keys()):
                 # create new track
                 self._create_new_track(es_feature, emotion_cat, 
@@ -172,23 +206,24 @@ class DeepSortTracker(BaseTracker):
         all_start_end_offset_track_filter = []
         all_emotion_category_tracks_filter = []
         all_tracks_filter = []
+        
+        
 
-        for es_feat_track, se_track, ec_track, track in zip(self.all_es_feat_tracks.values(), 
-                                                            self.all_start_end_offset_track.values(), 
-                                                            self.all_emotion_category_tracks.values(), 
-                                                            self.all_tracks.values()):
+        for es_feat_track, se_track, ec_track, track in zip(self.all_es_feat_tracks.items(), 
+                                                            self.all_start_end_offset_track.items(), 
+                                                            self.all_emotion_category_tracks.items(), 
+                                                            self.all_tracks.items()):
             
-            length = es_feat_track.shape[0] # length of the track (in frames)
-            
+            length = es_feat_track[1].shape[0] # length of the track (in frames)
             if length >= self.config.len_face_tracks:
-                all_es_feat_tracks_filter.append(es_feat_track)
-                all_start_end_offset_track_filter.append(se_track)
-                all_emotion_category_tracks_filter.append(ec_track)
+                all_es_feat_tracks_filter.append(es_feat_track[1])
+                all_start_end_offset_track_filter.append(se_track[1])
+                all_emotion_category_tracks_filter.append(ec_track[1])
                 all_tracks_filter.append(track)
 
         return all_es_feat_tracks_filter, all_start_end_offset_track_filter, all_emotion_category_tracks_filter, all_tracks_filter
         
-    def convert_bbox_xyxy_to_xywh(self, bbox_list_xyxy):
+    def convert_bbox_xyxy_to_xcycwh(self, bbox_list_xyxy):
         bbox_list_xywh = []
         for bbox_xyxy in bbox_list_xyxy:
             x_min, y_min, x_max, y_max = bbox_xyxy
@@ -196,50 +231,67 @@ class DeepSortTracker(BaseTracker):
             bbox_h = y_max - y_min
             bbox_xc = x_min + bbox_w / 2
             bbox_yc = y_min + bbox_h / 2
-            bbox_xywh = [bbox_xc, bbox_yc, bbox_w+self.extend_width, bbox_h+self.extend_height]
+            # bbox_xywh = [bbox_xc, bbox_yc, bbox_w+self.extend_width, bbox_h+self.extend_height]
+            bbox_xywh = [bbox_xc, bbox_yc, bbox_w, bbox_h]
             bbox_list_xywh.append(bbox_xywh)
         return bbox_list_xywh
-
+    def convert_bbox_xywh_to_xcycwh(self, bbox_list_xywh):
+        bbox_list_xcycwh = []
+        for bbox_xywh in bbox_list_xywh:
+            x, y, w, h = bbox_xywh
+            xc, yc = x + w/2, y + h/2
+            bbox_xcycwh = [xc, yc, w, h]
+            bbox_list_xcycwh.append(bbox_xcycwh)
+        return bbox_list_xcycwh
+    
     def run(self, video, face_detector, emot_extractor, f_p_in):
         self._init_list_record()
         frames_list = list(video.iter_frames())
+        
         print(f_p_in)
-
+        
         for idx_frame, frame in tqdm(enumerate(frames_list), total=len(frames_list)):
             if idx_frame % self.config.skip_frame != 0:
                 continue      
-            
+            frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR) 
             # detect faces
             bboxes, probs = face_detector.run(frame)
                         
             if bboxes is None:
-                # print("No faces found!")
+                print("No faces found!")
                 continue
-            
             # Track the objects using DeepSORT
             ## Convert the face box xyxy to xc|yc|wh and extend the box by self.extend_width, self.extend_height units 
-            bboxes_xywh = np.array(self.convert_bbox_xyxy_to_xywh(bboxes))
-            
-            ## Update deepsort 
-            track_bboxes = self.update(bboxes_xywh, probs, frame)
+            if self.config.face_detector == "mtcnn":
+                # print("Using MTCNN detector")
+                bboxes_xcycwh = np.array(self.convert_bbox_xyxy_to_xcycwh(bboxes))
+                
+            elif self.config.face_detector == "retinaface":
+                # print("Using RetinaFace detector")
+                bboxes_xcycwh = np.array(self.convert_bbox_xywh_to_xcycwh(bboxes))
+              
+            track_bboxes = self.update(bboxes_xcycwh, probs, frame)
             
             if len(track_bboxes) == 0:
-                # print("Can't assign tracker!")
+                print("Can't assign tracker!")
                 continue
             
             self._create_or_update(track_bboxes, emot_extractor, idx_frame, frame)
 
             # debug mode
             if self.config.is_debug:
-                if idx_frame > self.config.max_frame_debug:
+                # if idx_frame > self.config.max_frame_debug:
+                
+                if idx_frame >= len(frames_list)-1:
                     self._debug_visualize_track_emotion(frames_list, f_p_in, 
-                                          video.fps, video.w, video.h)
+                                            video.fps, video.w, video.h)
                     break
         
         # get final result
         all_es, all_se_offset, all_emot_cat, all_track = self._filter_tracks()
+        # print("Number of missing frames: ", self.number_of_missing_frames)
 
-        return all_es, all_se_offset, all_emot_cat, all_track
+        return all_es, all_se_offset, all_emot_cat
 
 
 
@@ -326,6 +378,20 @@ def iou_cost(tracks, detections, track_indices=None,
 
     
 # feature extractor
+class DeepFaceExtractor(object):
+    def __init__(self, model_name, enforce_detection):
+        self.model_name = model_name
+        self.enforce_detection = enforce_detection
+
+    def __call__(self, im_crops):
+        features_list = []
+        for im_crop in im_crops:
+            embedding_objs = DeepFace.represent(im_crop, model_name = self.model_name, enforce_detection = self.enforce_detection)
+            features_list.append(embedding_objs[0]["embedding"])
+        features = np.array(features_list)
+        
+        return features
+    
 class Extractor(object):
     def __init__(self, model_path, use_cuda=True):
         self.net = Net(reid=True)
@@ -667,6 +733,7 @@ class NearestNeighborDistanceMetric(object):
             `targets[i]` and `features[j]`.
 
         """
+        # pdb.set_trace()
         cost_matrix = np.zeros((len(targets), len(features)))
         for i, target in enumerate(targets):
             cost_matrix[i, :] = self._metric(self.samples[target], features)

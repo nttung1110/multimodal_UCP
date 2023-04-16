@@ -1,5 +1,5 @@
 exp_name: "extractor_'@{extractor.name}'-aggregator_'@{aggregator.name}'-ucp_'@{ucp.name}'"
-output_dir: ./results_text_EVAL/
+output_dir: ./results/results_text_EVAL/
 save_output: True
 merge_option: default
 mark: default

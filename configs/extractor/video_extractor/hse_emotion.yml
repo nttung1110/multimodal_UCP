@@ -1,5 +1,4 @@
 extractor:
   name: hse
-
   model_name: enet_b0_8_best_afew
-  device: 'cuda:0'
+  # device: 'cuda:0'

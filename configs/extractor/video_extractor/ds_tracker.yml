@@ -2,24 +2,28 @@ tracker:
   name: deepsort
 
   # DEEPSORT CONFIGS
-  is_debug: False
-  model_path: checkpoint_deep_sort/ckpt.t7
+  is_debug: True
+  model_path: checkpoints/checkpoint_deep_sort/ckpt.t7
   model_config: None
-  max_dist: 0.3 # maximum distance between a detected object and a track in order for them to be considered a match
-  min_confidence: 0.7 # minimum confidence threshold for accepting detections
+  max_dist: 0.2 # 0(same) --> 2(different) maximum distance between a detected object and a track in order for them to be considered a match
+  min_confidence: 0.8 # minimum confidence threshold for accepting detections
   nms_max_overlap: 1.0 # maximum overlap allowed between two detections, used to remove duplicate detections that occur when an object is detected by multiple overlapping bounding boxes
-  max_iou_distance: 0.6 # maximum intersection-over-union (IOU) distance for matching tracks with detections
-  max_age: 200 # maximum number of frames that a track can exist without receiving a detection before it is deleted, used to remove tracks that are no longer being detected
-  n_init: 10 # the number of frames that a track must be detected in before it is considered a valid track
-  nn_budget: 20 #  the maximum number of tracks that can be maintained by the algorithm at any given time
+  max_iou_distance: 0.8 # maximum intersection-over-union (IOU) distance for matching tracks with detections
+  max_age: 50 # maximum number of frames that a track can exist without receiving a detection before it is deleted, used to remove tracks that are no longer being detected
+  n_init: 25 # the number of frames that a track must be detected in before it is considered a valid track
+  nn_budget: 10 #  the maximum number of tracks that can be maintained by the algorithm at any given time
   use_cuda: True
 
   # VISUAL ES EXTRACTOR CONFIGS
-  video_length: 300 # seconds (~ approximation)
   skip_frame: 1
-  len_face_tracks: 75 # 75 frames at 25 fps = 3 seconds
-  extend_width: 20
-  extend_height: 100 # extend the height to capture more information about the person
+  len_face_tracks: 10 # 75 frames at 25 fps = 3 seconds
 
-  folder_debug_tracking: './debug_tracking_ds'
-  max_frame_debug: 3000
+  folder_debug_tracking: './results/debug_tracking_ds'
+  reduce_resolution: True # reduce w and h by 2 times to get a smaller resolution video
+  max_frame_debug: 400
+ 
+  reid_feature_extractor: deepface_extractor # default_ds_extractor
+  model_name: Facenet512 # checkpoints/checkpoint_deep_sort/ckpt.t7
+  distance_metric: cosine # euclidean
+  enforce_detection: False # do not use face detection on an image
+  face_detector: retinaface # mtcnn

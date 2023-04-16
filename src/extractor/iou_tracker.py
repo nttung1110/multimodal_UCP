@@ -151,7 +151,7 @@ class IoUTracker(BaseTracker):
             if length >= self.config.len_face_tracks:
                 all_es_feat_tracks_filter.append(es_feat_track)
                 all_start_end_offset_track_filter.append(se_track)
-                all_emotion_category_tracks_filter.append(ec_track)
+                all_emotion_category_tracks_filter.append(list(ec_track))
 
         return all_es_feat_tracks_filter, all_start_end_offset_track_filter, all_emotion_category_tracks_filter
 
@@ -179,8 +179,8 @@ class IoUTracker(BaseTracker):
             # debug mode
             if self.config.is_debug:
                 if idx_frame > self.config.max_frame_debug:
-                    self._debug_visualize_track_emotion(frames_list, f_p_in, 
-                                          video.fps, video.w, video.h)
+                    # self._debug_visualize_track_emotion(frames_list, f_p_in, 
+                    #                       video.fps, video.w, video.h)
                     break
 
         # debug visualize tracking video

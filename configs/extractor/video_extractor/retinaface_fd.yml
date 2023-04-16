@@ -1,0 +1,7 @@
+detector:
+  name: retinaface
+  detector_backend: retinaface
+  enforce_detection: False
+  
+
+

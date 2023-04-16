@@ -11,6 +11,7 @@ class BaseTracker():
     # base class for tracker
     def __init__(self, config):
         self.config = config
+        self.number_of_missing_frames = 0
 
     def _debug_visualize_track_emotion(self, frames_list, f_p_in, fps, w, h):
         # from frame list and all track, drawing face bbox
@@ -26,6 +27,7 @@ class BaseTracker():
         output = cv2.VideoWriter(debug_vid_path, fourcc, fps, (w, h), True)
 
         # construct frame writing annotation information dict
+        
         frame_write = {}
         for idx_track, cur_track_info in self.all_tracks.items():
             cur_track_emotion = self.all_emotion_category_tracks[idx_track]
@@ -48,7 +50,7 @@ class BaseTracker():
                 # box writing in frame
                 box = where_face
                 frame_write[which_frame].append((box, text_box))
-
+                
         for idx, frame in tqdm(enumerate(frames_list)):
             annot_frame = frame
             annot_frame = cv2.cvtColor(annot_frame, cv2.COLOR_RGB2BGR) 
@@ -87,6 +89,14 @@ class BaseTracker():
         # Update existing track
         self.all_tracks[track_id]['bbox'].append(bbox)
         self.all_tracks[track_id]['frames_appear'].append(frames_appear)
+        
+        time_interpolate = frames_appear - self.all_tracks[track_id]['frames_appear'][-2] - 1
+
+        if time_interpolate > 0:
+            self.number_of_missing_frames += time_interpolate
+            old_rep_track = self.all_es_feat_tracks[track_id][-1].tolist()
+            self.all_es_feat_tracks[track_id] = np.append(self.all_es_feat_tracks[track_id], [old_rep_track]*time_interpolate, axis=0)
+
 
         new_es_array_track = np.array([es_feature])
         self.all_es_feat_tracks[track_id] = np.concatenate([self.all_es_feat_tracks[track_id], new_es_array_track])
