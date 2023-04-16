@@ -1,11 +1,12 @@
 tracker:
   name: iou
 
-  skip_frame: 3
-  threshold_dying_track_len: 30
-  threshold_iou_min_track: 0.4
-  len_face_tracks: 30
+  skip_frame: 3 # skipping frame for faster inference
+  threshold_dying_track_len: 30 # close a track if it is inactive for so long
+  threshold_iou_min_track: 0.4 # iou for assigning box to last box of a track
+  len_face_tracks: 30 # only keep those tracks having len exceeding this number
 
+  # this is for debugging only
   is_debug: True
   folder_debug_tracking: './results/debug_tracking_iou'
   max_frame_debug: 400
