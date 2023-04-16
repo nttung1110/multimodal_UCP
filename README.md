@@ -10,12 +10,12 @@ pip install fastreid
 
 ## Overview
 
-The unsupervised approach is mainly divided into three sequential steps:
-- Individual tracking, and extracting individual emotion signals
-- Unsupervised change point algorithm
-- Finding final change point with aggregation technique.
+The Unsupervised Change Point (UCP) algorithm consists of three main steps:
+1. Track individuals and extract individual emotion signals
+2. Use an unsupervised change point algorithm
+3. Find the final change point with an aggregation technique.
 
-In terms of the flow, the inference pipeline for three different modalities are the same. The only difference lies in detailed implementation of each aforementioned component. Therefore, it is essential to specify what components are used for each type of inference pipeline. Here we have three types of pipeline corresponding to 3 different modalities: video, text, audio
+In terms of the flow, the inference pipeline for three different modalities are the same. The only difference lies in detailed implementation of each aforementioned component. Therefore, it is essential to specify what components are used for each type of inference pipeline. Here we have three types of pipeline corresponding to 3 different modalities: video, text, audio.
 
 
 ## How to run
