@@ -54,4 +54,9 @@ It is required to specify components of inference pipeline: which detector, whic
 
 A few examples of video inference script that we have prepared could also be found in ```scripts/video_scripts/```
 
+You also need to change the path to the video data in ```configs/data/video.yml``` or ```configs/data/video_csv.yml```
 
+Run the script once you have done with configuration selection in bash file:
+```
+bash scripts/video_inference/{name_file}.sh
+```
